@@ -6,9 +6,17 @@
     href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%22-.2em%22 y=%22.9em%22 font-size=%2290%22>🐈‍⬛</text></svg>"
   />
   <meta name="viewport" content="width=device-width,user-scalable=no" />
-  <link rel="stylesheet" href="../src/styles/main.css" />
+  <% htmlWebpackPlugin.files.css.forEach(function(cssFile) { %>
+  <style>
+    <%= compilation.assets[cssFile.substr(htmlWebpackPlugin.files.publicPath.length)].source() %>
+  </style>
+  <% }) %>
 </head>
 <body>
   <canvas id="screen"></canvas>
-  <script src="../src/scripts/index.js"></script>
+  <% htmlWebpackPlugin.files.js.forEach(function(jsFile) { %>
+  <script>
+    <%= compilation.assets[jsFile.substr(htmlWebpackPlugin.files.publicPath.length)].source() %>
+  </script>
+  <% }) %>
 </body>

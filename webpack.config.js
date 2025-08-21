@@ -1,20 +1,22 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
 module.exports = {
-  entry: './src/scripts/index.js',
+  mode: 'production',
+  entry: './src/scripts/index.js', // Assumes your JS imports the CSS (e.g., import '../styles/main.css';)
   output: {
-    path: path.resolve(__dirname, 'dist'), // Output bundles to dist directory
-    filename: '[name].[contenthash].js',
-    clean: true, // Only cleans the dist directory
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'bundle.js', // Temporary JS file (will be inlined, not kept)
+    clean: true, // Safely cleans only the dist/ directory
   },
   module: {
     rules: [
       {
         test: /\.css$/,
-        use: ['style-loader', 'css-loader'],
+        use: [MiniCssExtractPlugin.loader, 'css-loader'], // Extracts CSS for inlining
       },
     ],
   },
@@ -43,9 +45,9 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './public/index.html',
-      filename: '../index.html', // Output to root directory
-      inject: false,
+      template: './public/index.ejs', // Use .ejs extension for EJS syntax
+      filename: '../index.html', // Outputs to root
+      inject: false, // We handle injection manually in the template
       minify: {
         removeComments: true,
         collapseWhitespace: true,
@@ -58,6 +60,9 @@ module.exports = {
         minifyCSS: true,
         minifyURLs: true,
       },
+    }),
+    new MiniCssExtractPlugin({
+      filename: 'styles.css', // Temporary CSS file (will be inlined, not kept)
     }),
   ],
 };
