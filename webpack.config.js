@@ -4,65 +4,121 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
-module.exports = {
-  mode: 'production',
-  entry: './src/scripts/index.js', // Assumes your JS imports the CSS (e.g., import '../styles/main.css';)
-  output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'bundle.js', // Temporary JS file (will be inlined, not kept)
-    clean: true, // Safely cleans only the dist/ directory
-  },
-  module: {
-    rules: [
-      {
-        test: /\.css$/,
-        use: [MiniCssExtractPlugin.loader, 'css-loader'], // Extracts CSS for inlining
-      },
-    ],
-  },
-  devServer: {
-    static: {
-      directory: path.join(__dirname, 'public'),
+module.exports = (env, argv) => {
+  const isProduction = argv.mode === 'production';
+
+  return {
+    mode: argv.mode || 'development',
+    entry: './src/scripts/index.js',
+    output: {
+      path: path.resolve(__dirname, 'dist'),
+      filename: 'bundle.js',
+      clean: true,
+      publicPath: isProduction ? '' : '/',
     },
-    hot: true,
-    open: true,
-    port: 8080,
-  },
-  optimization: {
-    minimize: true,
-    minimizer: [
-      new TerserPlugin({
-        terserOptions: {
-          compress: {
-            drop_console: true,
-            drop_debugger: true,
-          },
-          mangle: true,
+    module: {
+      rules: [
+        {
+          test: /\.css$/,
+          use: [
+            isProduction ? MiniCssExtractPlugin.loader : 'style-loader',
+            'css-loader',
+          ],
         },
-      }),
-      new CssMinimizerPlugin(),
-    ],
-  },
-  plugins: [
-    new HtmlWebpackPlugin({
-      template: './public/index.ejs', // Use .ejs extension for EJS syntax
-      filename: '../index.html', // Outputs to root
-      inject: false, // We handle injection manually in the template
-      minify: {
-        removeComments: true,
-        collapseWhitespace: true,
-        removeRedundantAttributes: true,
-        useShortDoctype: true,
-        removeEmptyAttributes: true,
-        removeStyleLinkTypeAttributes: true,
-        keepClosingSlash: true,
-        minifyJS: true,
-        minifyCSS: true,
-        minifyURLs: true,
+      ],
+    },
+    devServer: {
+      static: {
+        directory: path.join(__dirname, 'public'),
       },
-    }),
-    new MiniCssExtractPlugin({
-      filename: 'styles.css', // Temporary CSS file (will be inlined, not kept)
-    }),
-  ],
+      hot: true,
+      open: true,
+      port: 8080,
+      historyApiFallback: true,
+      client: {
+        overlay: true,
+      },
+    },
+    optimization: {
+      minimize: isProduction,
+      minimizer: [
+        new TerserPlugin({
+          terserOptions: {
+            ecma: 2020,
+            compress: {
+              drop_console: true,
+              drop_debugger: true,
+              passes: 3,
+              arrows: true,
+              booleans: true,
+              collapse_vars: true,
+              computed_props: true,
+              conditionals: true,
+              dead_code: true,
+              evaluate: true,
+              global_defs: { DEBUG: false },
+              if_return: true,
+              inline: true,
+              join_vars: true,
+              loops: true,
+              negate_iife: true,
+              properties: true,
+              reduce_funcs: true,
+              reduce_vars: true,
+              sequences: true,
+              side_effects: true,
+              switches: true,
+              typeofs: true,
+            },
+            mangle: {
+              properties: true,
+              safari10: true,
+            },
+            format: {
+              comments: false,
+              beautify: false,
+            },
+          },
+          extractComments: false,
+        }),
+        new CssMinimizerPlugin({
+          minimizerOptions: {
+            preset: [
+              'default',
+              {
+                discardComments: { removeAll: true },
+                normalizeWhitespace: true,
+                colormin: true,
+                mergeLonghand: true,
+              },
+            ],
+          },
+        }),
+      ],
+    },
+    plugins: [
+      new HtmlWebpackPlugin({
+        template: './public/index.ejs',
+        filename: isProduction ? '../index.html' : 'index.html',
+        inject: false,
+        minify: isProduction
+          ? {
+              removeComments: true,
+              collapseWhitespace: true,
+              removeRedundantAttributes: true,
+              useShortDoctype: true,
+              removeEmptyAttributes: true,
+              removeStyleLinkTypeAttributes: true,
+              keepClosingSlash: true,
+              minifyJS: true,
+              minifyCSS: true,
+              minifyURLs: true,
+            }
+          : false,
+      }),
+      ...(isProduction
+        ? [new MiniCssExtractPlugin({ filename: 'styles.css' })]
+        : []),
+    ],
+  };
 };
