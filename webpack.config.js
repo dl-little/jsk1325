@@ -12,7 +12,7 @@ module.exports = (env, argv) => {
     entry: './src/scripts/index.js',
     output: {
       path: path.resolve(__dirname, 'dist'),
-      filename: 'bundle.js',
+      filename: '[name].[contenthash].js',
       clean: true,
       publicPath: isProduction ? '' : '/',
     },
@@ -38,6 +38,13 @@ module.exports = (env, argv) => {
       client: {
         overlay: true,
       },
+      devMiddleware: {
+        publicPath: 'auto',
+      },
+    },
+    watchOptions: {
+      ignored: /node_modules/,
+      poll: 1000,
     },
     optimization: {
       minimize: isProduction,
@@ -71,8 +78,7 @@ module.exports = (env, argv) => {
               typeofs: true,
             },
             mangle: {
-              properties: true,
-              safari10: true,
+              properties: false,
             },
             format: {
               comments: false,

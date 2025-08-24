@@ -1,13 +1,30 @@
-import '../styles/main.css';
-// State
-// =====
-// (ex: 0: title screen, 1: game, 2: score screen)
-var state = 0;
+import '../styles/root.css';
+import '../styles/screen.css';
+import gameLoop from './gameLoop';
+import { handleMenuClick } from './clicks';
+
+// Game Data
+// =========
+let gameData = {
+  count: 0,
+  characterInfo: {
+    balls: 0,
+  },
+  worldInfo: {
+    state: 0,
+    ranInit: false,
+    tools: {},
+    objects: {},
+  },
+  paletteArgs: {},
+};
+
 // Prevent long touch effect on mobile
 // ===================================
 oncontextmenu = (e) => {
   e.preventDefault();
 };
+
 // Keyboard inputs
 // ===============
 // - u, l, r, d: WASD/ZQSD/arrow keys
@@ -16,38 +33,59 @@ oncontextmenu = (e) => {
 // - E: enter
 // - R, T, Y, X, C, V, B, N, F, J: letters
 // Ex: if(keys.r) { /* move to the right */ }
-var keys = {};
+let keys = {};
 onkeydown = onkeyup = (e) => {
-  keys[
-    'E**S***************s****lurd************************lBCr*F***J***N**lRdT*VuXYu'[
-      e.which - 13
-    ]
-  ] = e.type[5];
+  const map = {
+    Enter: 'E',
+    ShiftLeft: 'S',
+    ShiftRight: 'S',
+    Space: 's',
+    KeyA: 'l',
+    KeyQ: 'l',
+    ArrowLeft: 'l',
+    KeyD: 'r',
+    ArrowRight: 'r',
+    KeyW: 'u',
+    KeyZ: 'u',
+    ArrowUp: 'u',
+    KeyS: 'd',
+    ArrowDown: 'd',
+    KeyR: 'R',
+    KeyT: 'T',
+    KeyY: 'Y',
+    KeyX: 'X',
+    KeyC: 'C',
+    KeyV: 'V',
+    KeyB: 'B',
+    KeyN: 'N',
+    KeyF: 'F',
+    KeyJ: 'J',
+  };
+  const k = map[e.code];
+  if (k) keys[k] = e.type[5];
 };
+
 // Game loop
 // =========
 setInterval(() => {
-  if (state == 0) {
-    // state 0 animation ...
-  } else if (state == 1) {
-    // state 1 animation ...
-  }
-  // ...
+  gameLoop(keys, gameData);
 }, 16); // 60 fps
+
 // Click handler
 // =============
 onclick = (e) => {
-  if (state == 0) {
-    state = 4;
-    // state 0 clicks ...
-  } else if (state == 1) {
-    // state 1 clicks ...
-  } else if (state == 4) {
-    document.getElementById('screen').style.backgroundColor = 'purple';
+  switch (gameData.worldInfo.state) {
+    case 1:
+    case 2:
+      break;
+    default:
+      handleMenuClick(e, gameData);
+      break;
   }
-  // ...
 };
 
+// Accept HMR
+// ==========
 if (module.hot) {
   module.hot.accept();
 }
